@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Seadays — Sea Time Calculator (clone)</title>
+<title>Seadays — Sea Time Calculator (revised)</title>
 <style>
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:900px;margin:28px auto;padding:0 16px;color:#111}
   h1{font-size:1.6rem;margin-bottom:.2rem}
@@ -20,8 +20,8 @@
 </style>
 </head>
 <body>
-  <h1>Seadays — Sea Time Calculator (clone)</h1>
-  <p class="lead">A simple tool to calculate sea time. This is a client-side implementation you can modify.</p>
+  <h1>Seadays — Sea Time Calculator (Revised)</h1>
+  <p class="lead">A simple tool to calculate sea time.</p>
 
   <form id="form" onsubmit="return false;">
     <div>
@@ -37,17 +37,15 @@
     <div>
       <label for="watch">Watch System</label>
       <select id="watch">
-        <option value="none">Not applicable / Daywork</option>
-        <option value="4on8">4 on / 8 off</option>
-        <option value="6on6">6 on / 6 off</option>
-        <option value="other">Other</option>
+        <option value="8h">8 hours watches</option>
+        <option value="12h">12 hours watches</option>
       </select>
-      <small>Watch system is recorded for reference — calculation below uses days at sea and refit days.</small>
+      <small>Choose the watch pattern worked during the period.</small>
     </div>
 
     <div>
       <label for="daysUnderway">Days Underway (at sea)</label>
-      <input id="daysUnderway" type="number" min="0" placeholder="Optional — leave blank to use start/end" />
+      <input id="daysUnderway" type="number" min="0" placeholder="Optional — leave blank to use calculated days" />
     </div>
 
     <div>
@@ -77,13 +75,12 @@
   <div class="log" id="log"></div>
 
 <script>
-  // Utility: difference in days (inclusive)
-  function daysBetweenInclusive(startDate, endDate) {
-    // Normalize to UTC midnight to avoid DST issues
+  // NEW: difference in days (end date NOT counted)
+  function daysBetween(startDate, endDate) {
     const msPerDay = 24 * 60 * 60 * 1000;
     const s = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
     const e = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    return Math.round((e - s) / msPerDay) + 1; // inclusive of both days
+    return Math.round((e - s) / msPerDay); // end date NOT included
   }
 
   const startEl = document.getElementById('start');
@@ -111,44 +108,40 @@
       alert('Please choose both start and end dates.');
       return;
     }
-    if (end < start) {
-      alert('End date must be the same or after start date.');
+    if (end <= start) {
+      alert('End date must be after start date (end date is not counted).');
       return;
     }
 
-    const totalLogged = daysBetweenInclusive(start, end);
+    // NEW: end date not counted
+    const totalLogged = daysBetween(start, end);
 
-    // Decide days at sea: if user provided Days Underway use it (validated), otherwise assume totalLogged
     let daysAtSea = explicitUnderway ? Math.max(0, explicitUnderway) : totalLogged;
-    // subtract refit days
     daysAtSea = Math.max(0, daysAtSea - refit);
 
-    // Example watch system note — could be extended to convert to "equivalent" sea days for different certificates.
     const watch = watchEl.value;
     let watchLabel = '';
     switch (watch) {
-      case '4on8':
-        watchLabel = '4 on / 8 off (common merchant watch)';
+      case '8h':
+        watchLabel = '8 hours watches';
         break;
-      case '6on6':
-        watchLabel = '6 on / 6 off';
-        break;
-      case 'other':
-        watchLabel = 'Other watch pattern';
+      case '12h':
+        watchLabel = '12 hours watches';
         break;
       default:
-        watchLabel = 'Daywork / Not applicable';
+        watchLabel = 'Not specified';
     }
 
     totalDaysEl.textContent = totalLogged;
     seaDaysEl.textContent = daysAtSea;
     watchOutEl.textContent = watchLabel;
 
-    display(`From ${start.toLocaleDateString()} to ${end.toLocaleDateString()} = ${totalLogged} calendar day(s).` +
-            (explicitUnderway ? ` Using provided Days Underway: ${explicitUnderway}.` : '') +
-            (refit ? ` Subtracting refit days: ${refit}.` : ''));
+    display(
+      `From ${start.toLocaleDateString()} to ${end.toLocaleDateString()} = ${totalLogged} day(s) (end date not counted).`
+      + (explicitUnderway ? ` Using provided Days Underway: ${explicitUnderway}.` : '')
+      + (refit ? ` Subtracting refit days: ${refit}.` : '')
+    );
 
-    // Example: log for saving/exporting (simple CSV row)
     const csvRow = [
       start.toISOString().slice(0,10),
       end.toISOString().slice(0,10),
@@ -157,8 +150,8 @@
       refit,
       watch
     ].join(',');
-    // present user a quick copyable CSV line
-    const csvBox = document.getElementById('csvCopy');
+    
+    let csvBox = document.getElementById('csvCopy');
     if (!csvBox) {
       const pre = document.createElement('pre');
       pre.id = 'csvCopy';
@@ -174,10 +167,17 @@
 
   document.getElementById('calc').addEventListener('click', calculate);
   document.getElementById('reset').addEventListener('click', () => {
-    startEl.value = ''; endEl.value = ''; daysUnderwayEl.value = ''; daysRefitEl.value = '0'; watchEl.value = 'none';
-    totalDaysEl.textContent = '—'; seaDaysEl.textContent = '—'; watchOutEl.textContent = '—'; logEl.innerHTML = '';
+    startEl.value = ''; 
+    endEl.value = ''; 
+    daysUnderwayEl.value = ''; 
+    daysRefitEl.value = '0'; 
+    watchEl.value = '8h';
+    totalDaysEl.textContent = '—'; 
+    seaDaysEl.textContent = '—'; 
+    watchOutEl.textContent = '—'; 
+    logEl.innerHTML = '';
   });
-
 </script>
+
 </body>
 </html>
