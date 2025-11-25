@@ -10,7 +10,6 @@
   p.lead{color:#444;margin-top:0}
   form{display:grid;gap:12px;background:#fafafa;padding:14px;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
   label{display:block;font-weight:600;font-size:.9rem}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
   input[type="date"], input[type="number"], select{padding:8px;border-radius:6px;border:1px solid #ddd;min-width:160px}
   button{background:#0b63d6;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer}
   .result{margin-top:12px;padding:12px;border-radius:8px;background:#fff;border:1px solid #eee}
@@ -69,18 +68,22 @@
     <div><strong>Total logged days:</strong> <span id="totalDays">—</span></div>
     <div><strong>Days at sea used:</strong> <span id="seaDays">—</span></div>
     <div><strong>Watch system:</strong> <span id="watchOut">—</span></div>
+
+    <!-- NEW LINE -->
+    <div><strong>Total sea time:</strong> <span id="totalSeaTime">—</span></div>
+
     <small class="disclaimer">Disclaimer: This is an estimation tool. Always refer to official regulations for formal records.</small>
   </div>
 
   <div class="log" id="log"></div>
 
 <script>
-  // NEW: difference in days (end date NOT counted)
+  // Difference in days (end date NOT counted)
   function daysBetween(startDate, endDate) {
     const msPerDay = 24 * 60 * 60 * 1000;
     const s = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
     const e = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    return Math.round((e - s) / msPerDay); // end date NOT included
+    return Math.round((e - s) / msPerDay);
   }
 
   const startEl = document.getElementById('start');
@@ -92,6 +95,7 @@
   const totalDaysEl = document.getElementById('totalDays');
   const seaDaysEl = document.getElementById('seaDays');
   const watchOutEl = document.getElementById('watchOut');
+  const totalSeaTimeEl = document.getElementById('totalSeaTime');
   const logEl = document.getElementById('log');
 
   function display(msg) {
@@ -113,33 +117,30 @@
       return;
     }
 
-    // NEW: end date not counted
     const totalLogged = daysBetween(start, end);
 
     let daysAtSea = explicitUnderway ? Math.max(0, explicitUnderway) : totalLogged;
     daysAtSea = Math.max(0, daysAtSea - refit);
 
     const watch = watchEl.value;
-    let watchLabel = '';
-    switch (watch) {
-      case '8h':
-        watchLabel = '8 hours watches';
-        break;
-      case '12h':
-        watchLabel = '12 hours watches';
-        break;
-      default:
-        watchLabel = 'Not specified';
-    }
+    let watchLabel = (watch === '8h') ? '8 hours watches' : '12 hours watches';
+
+    // NEW: total sea time conversion
+    let totalSeaTime = (watch === '8h')
+      ? daysAtSea
+      : daysAtSea * 1.5;
+
+    totalSeaTime = Math.round(totalSeaTime * 100) / 100;
 
     totalDaysEl.textContent = totalLogged;
     seaDaysEl.textContent = daysAtSea;
     watchOutEl.textContent = watchLabel;
+    totalSeaTimeEl.textContent = totalSeaTime;
 
     display(
-      `From ${start.toLocaleDateString()} to ${end.toLocaleDateString()} = ${totalLogged} day(s) (end date not counted).`
-      + (explicitUnderway ? ` Using provided Days Underway: ${explicitUnderway}.` : '')
-      + (refit ? ` Subtracting refit days: ${refit}.` : '')
+      `From ${start.toLocaleDateString()} to ${end.toLocaleDateString()} = ${totalLogged} days`
+      + (explicitUnderway ? ` | Using provided Days Underway: ${explicitUnderway}` : '')
+      + (refit ? ` | Refit excluded: ${refit}` : '')
     );
 
     const csvRow = [
@@ -147,6 +148,7 @@
       end.toISOString().slice(0,10),
       totalLogged,
       daysAtSea,
+      totalSeaTime,
       refit,
       watch
     ].join(',');
@@ -174,7 +176,8 @@
     watchEl.value = '8h';
     totalDaysEl.textContent = '—'; 
     seaDaysEl.textContent = '—'; 
-    watchOutEl.textContent = '—'; 
+    watchOutEl.textContent = '—';
+    totalSeaTimeEl.textContent = '—';
     logEl.innerHTML = '';
   });
 </script>
