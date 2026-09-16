@@ -44,7 +44,7 @@
 
     <div>
       <label for="daysUnderway">Days Underway (at sea)</label>
-      <input id="daysUnderway" type="number" min="0" placeholder="Optional — leave blank to use calculated days" />
+      <input id="daysUnderway" type="number" min="0"/>
     </div>
 
     <div>
@@ -123,10 +123,10 @@
     let watchLabel = (watch === '8h') ? '8 hours watches' : '12 hours watches';
 
     // Corrected watch-based multiplier:
-    // TOTAL SEA TIME = total logged days  OR  total logged days * 1.5
+    // TOTAL SEA TIME = days underway  OR  days underway * 1.5
     let totalSeaTime = (watch === '8h')
-      ? totalLogged
-      : totalLogged * 1.5;
+      ? daysAtSea
+      : daysAtSea * 1.5;
 
     totalSeaTime = Math.round(totalSeaTime * 100) / 100;
 
