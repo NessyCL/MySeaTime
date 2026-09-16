@@ -1,183 +1,1226 @@
 <!doctype html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Seadays — Sea Time Calculator (final revised)</title>
+<title>Seadays — Sea Time Calculator</title>
+
 <style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:900px;margin:28px auto;padding:0 16px;color:#111}
+  body{
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    max-width:1000px;
+    margin:28px auto;
+    padding:0 16px;
+    color:#111
+  }
+
   h1{font-size:1.6rem;margin-bottom:.2rem}
+  h2{font-size:1.2rem;margin-top:28px}
   p.lead{color:#444;margin-top:0}
-  form{display:grid;gap:12px;background:#fafafa;padding:14px;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
-  label{display:block;font-weight:600;font-size:.9rem}
-  input[type="date"], input[type="number"], select{padding:8px;border-radius:6px;border:1px solid #ddd;min-width:160px}
-  button{background:#0b63d6;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer}
-  .result{margin-top:12px;padding:12px;border-radius:8px;background:#fff;border:1px solid #eee}
-  small.disclaimer{display:block;color:#666;margin-top:8px}
-  .log{margin-top:10px;font-size:.9rem;color:#333}
-  .flex-between{display:flex;justify-content:space-between;align-items:center}
+
+  form{
+    display:grid;
+    gap:12px;
+    background:#fafafa;
+    padding:14px;
+    border-radius:10px;
+    box-shadow:0 4px 18px rgba(0,0,0,.06)
+  }
+
+  label{
+    display:block;
+    font-weight:600;
+    font-size:.9rem
+  }
+
+  input[type="date"],
+  input[type="number"],
+  input[type="text"],
+  select{
+    padding:8px;
+    border-radius:6px;
+    border:1px solid #ddd;
+    min-width:160px;
+    box-sizing:border-box
+  }
+
+  button{
+    background:#0b63d6;
+    color:#fff;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer
+  }
+
+  button:hover{opacity:.9}
+
+  .delete-btn{
+    background:#c62828;
+    padding:6px 10px;
+    font-size:.8rem
+  }
+
+  .result{
+    margin-top:12px;
+    padding:12px;
+    border-radius:8px;
+    background:#fff;
+    border:1px solid #eee
+  }
+
+  small.disclaimer{
+    display:block;
+    color:#666;
+    margin-top:8px
+  }
+
+  .log{
+    margin-top:10px;
+    font-size:.9rem;
+    color:#333
+  }
+
+  .flex-between{
+    display:flex;
+    justify-content:space-between;
+    align-items:center
+  }
+
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:16px
+  }
+
+  .summary-card{
+    background:#fafafa;
+    border:1px solid #eee;
+    border-radius:10px;
+    padding:14px
+  }
+
+  .summary-card strong{
+    display:block;
+    font-size:1.5rem;
+    margin-top:4px
+  }
+
+  .table-container{
+    overflow-x:auto;
+    margin-top:10px
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    font-size:.88rem
+  }
+
+  th,td{
+    padding:10px 8px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+    white-space:nowrap
+  }
+
+  th{
+    background:#f5f5f5;
+    font-weight:700
+  }
+
+  .total-row{
+    font-weight:700;
+    background:#f8f8f8
+  }
+
+  .empty{
+    padding:20px;
+    text-align:center;
+    color:#777;
+    background:#fafafa;
+    border-radius:8px
+  }
+
+  @media(max-width:700px){
+    .summary{grid-template-columns:1fr}
+
+    table{font-size:.78rem}
+
+    th,td{padding:7px 5px}
+  }
 </style>
+
 </head>
+
 <body>
-  <h1>Seadays — Sea Time Calculator (Revised)</h1>
-  <p class="lead">A simple tool to calculate sea time.</p>
 
-  <form id="form" onsubmit="return false;">
-    <div>
-      <label for="start">Start Date (Joined Ship)</label>
-      <input id="start" type="date" required />
-    </div>
+<h1>Seadays — Sea Time Calculator</h1>
 
-    <div>
-      <label for="end">End Date (Left Ship)</label>
-      <input id="end" type="date" required />
-    </div>
+<p class="lead">
+  Calculate and keep track of your sea time for multiple voyages.
+</p>
 
-    <div>
-      <label for="watch">Watch System</label>
-      <select id="watch">
-        <option value="8h">8 hours watches</option>
-        <option value="12h">12 hours watches</option>
-      </select>
-      <small>Choose the watch pattern worked during the period.</small>
-    </div>
+<form id="form" onsubmit="return false;">
 
-    <div>
-      <label for="daysUnderway">Days Underway (at sea)</label>
-      <input id="daysUnderway" type="number" min="0"/>
-    </div>
+  <!-- VESSEL -->
 
-    <div>
-      <label for="daysRefit">Days in refit / ashore (to exclude)</label>
-      <input id="daysRefit" type="number" min="0" value="0" />
-    </div>
-
-    <div class="flex-between">
-      <div>
-        <button id="calc">Calculate Sea Time</button>
-        <button id="reset" type="button" style="margin-left:8px;background:#888">Reset</button>
-      </div>
-    </div>
-
-  </form>
-
-  <div id="out" class="result" aria-live="polite">
-    <div><strong>Total logged days:</strong> <span id="totalDays">—</span></div>
-    <div><strong>Days at sea used:</strong> <span id="seaDays">—</span></div>
-    <div><strong>Watch system:</strong> <span id="watchOut">—</span></div>
-
-    <!-- Corrected total sea time -->
-    <div><strong>Total sea time:</strong> <span id="totalSeaTime">—</span></div>
-
-    <small class="disclaimer">Disclaimer: This is an estimation tool. Always refer to official regulations for formal records.</small>
+  <div>
+    <label for="vessel">Vessel / Voyage (optional)</label>
+    <input
+      id="vessel"
+      type="text"
+      placeholder="e.g. MV Atlantic">
   </div>
 
-  <div class="log" id="log"></div>
+  <!-- RANK -->
+
+  <div>
+    <label for="rank">Rank</label>
+
+```
+<select id="rank">
+
+  <option value="Master">Master</option>
+
+  <option value="Chief Mate">
+    Chief Mate
+  </option>
+
+  <option value="Second Officer">
+    Second Officer
+  </option>
+
+  <option value="Third Officer">
+    Third Officer
+  </option>
+
+  <option value="Deck Cadet">
+    Deck Cadet
+  </option>
+
+  <option value="Other">
+    Other
+  </option>
+
+</select>
+```
+
+  </div>
+
+  <!-- GT -->
+
+  <div>
+
+```
+<label for="gt">
+  Gross Tonnage (GT)
+</label>
+
+<input
+  id="gt"
+  type="number"
+  min="0"
+  step="1"
+  placeholder="e.g. 25000">
+```
+
+  </div>
+
+  <!-- VOYAGE TYPE -->
+
+  <div>
+
+```
+<label for="voyageType">
+  Voyage Type
+</label>
+
+<select id="voyageType">
+
+  <option value="International">
+    International
+  </option>
+
+  <option value="Coastal">
+    Coastal
+  </option>
+
+  <option value="Inland">
+    Inland
+  </option>
+
+  <option value="Near Coastal">
+    Near Coastal
+  </option>
+
+  <option value="Domestic">
+    Domestic
+  </option>
+
+  <option value="Other">
+    Other
+  </option>
+
+</select>
+```
+
+  </div>
+
+  <!-- DATES -->
+
+  <div>
+
+```
+<label for="start">
+  Start Date (Joined Ship)
+</label>
+
+<input
+  id="start"
+  type="date"
+  required />
+```
+
+  </div>
+
+  <div>
+
+```
+<label for="end">
+  End Date (Left Ship)
+</label>
+
+<input
+  id="end"
+  type="date"
+  required />
+```
+
+  </div>
+
+  <!-- WATCH -->
+
+  <div>
+
+```
+<label for="watch">
+  Watch System
+</label>
+
+<select id="watch">
+
+  <option value="8h">
+    8 hours watches
+  </option>
+
+  <option value="12h">
+    12 hours watches
+  </option>
+
+</select>
+
+<small>
+  Choose the watch pattern worked during the period.
+</small>
+```
+
+  </div>
+
+  <!-- UNDERWAY -->
+
+  <div>
+
+```
+<label for="daysUnderway">
+  Days Underway (at sea)
+</label>
+
+<input
+  id="daysUnderway"
+  type="number"
+  min="0"/>
+```
+
+  </div>
+
+  <!-- REFIT -->
+
+  <div>
+
+```
+<label for="daysRefit">
+  Days in refit / ashore (to exclude)
+</label>
+
+<input
+  id="daysRefit"
+  type="number"
+  min="0"
+  value="0" />
+```
+
+  </div>
+
+  <!-- BUTTONS -->
+
+  <div class="flex-between">
+
+```
+<div>
+
+  <button id="calc">
+    Calculate Sea Time
+  </button>
+
+  <button
+    id="addVoyage"
+    type="button"
+    style="margin-left:8px;background:#198754">
+
+    Add to Voyage Log
+
+  </button>
+
+  <button
+    id="reset"
+    type="button"
+    style="margin-left:8px;background:#888">
+
+    Reset
+
+  </button>
+
+</div>
+```
+
+  </div>
+
+</form>
+
+<!-- CURRENT CALCULATION -->
+
+<div
+  id="out"
+  class="result"
+  aria-live="polite">
+
+  <div>
+    <strong>Total logged days:</strong>
+    <span id="totalDays">—</span>
+  </div>
+
+  <div>
+    <strong>Days at sea used:</strong>
+    <span id="seaDays">—</span>
+  </div>
+
+  <div>
+    <strong>Watch system:</strong>
+    <span id="watchOut">—</span>
+  </div>
+
+  <div>
+    <strong>Total sea time:</strong>
+    <span id="totalSeaTime">—</span>
+  </div>
+
+  <small class="disclaimer">
+    Disclaimer: This is an estimation tool.
+    Always refer to official regulations for formal records.
+  </small>
+
+</div>
+
+<div
+  class="log"
+  id="log">
+</div>
+
+<!-- SUMMARY -->
+
+<h2>Sea Time Summary</h2>
+
+<div class="summary">
+
+  <div class="summary-card">
+
+```
+Total voyages
+
+<strong id="voyageCount">
+  0
+</strong>
+```
+
+  </div>
+
+  <div class="summary-card">
+
+```
+Total logged days
+
+<strong id="sumLoggedDays">
+  0
+</strong>
+```
+
+  </div>
+
+  <div class="summary-card">
+
+```
+Total sea time
+
+<strong id="sumSeaTime">
+  0
+</strong>
+```
+
+  </div>
+
+</div>
+
+<!-- VOYAGE TABLE -->
+
+<h2>Voyage Log</h2>
+
+<div id="voyageTableContainer">
+
+  <div class="empty">
+    No voyages recorded yet.
+  </div>
+
+</div>
 
 <script>
-  // Difference in days (end date NOT counted)
-  function daysBetween(startDate, endDate) {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const s = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    const e = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    return Math.round((e - s) / msPerDay);
+
+/*
+ * ============================================================
+ * DATE CALCULATION
+ * End date is NOT counted.
+ * ============================================================
+ */
+
+function daysBetween(startDate, endDate) {
+
+  const msPerDay =
+    24 * 60 * 60 * 1000;
+
+  const s = Date.UTC(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  );
+
+  const e = Date.UTC(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate()
+  );
+
+  return Math.round(
+    (e - s) / msPerDay
+  );
+
+}
+
+
+/*
+ * ============================================================
+ * ELEMENTS
+ * ============================================================
+ */
+
+const vesselEl =
+  document.getElementById('vessel');
+
+const rankEl =
+  document.getElementById('rank');
+
+const gtEl =
+  document.getElementById('gt');
+
+const voyageTypeEl =
+  document.getElementById('voyageType');
+
+const startEl =
+  document.getElementById('start');
+
+const endEl =
+  document.getElementById('end');
+
+const daysUnderwayEl =
+  document.getElementById('daysUnderway');
+
+const daysRefitEl =
+  document.getElementById('daysRefit');
+
+const watchEl =
+  document.getElementById('watch');
+
+const totalDaysEl =
+  document.getElementById('totalDays');
+
+const seaDaysEl =
+  document.getElementById('seaDays');
+
+const watchOutEl =
+  document.getElementById('watchOut');
+
+const totalSeaTimeEl =
+  document.getElementById('totalSeaTime');
+
+const logEl =
+  document.getElementById('log');
+
+const voyageCountEl =
+  document.getElementById('voyageCount');
+
+const sumLoggedDaysEl =
+  document.getElementById('sumLoggedDays');
+
+const sumSeaTimeEl =
+  document.getElementById('sumSeaTime');
+
+const voyageTableContainer =
+  document.getElementById(
+    'voyageTableContainer'
+  );
+
+
+/*
+ * ============================================================
+ * VOYAGE STORAGE
+ * ============================================================
+ */
+
+let voyages =
+  JSON.parse(
+    localStorage.getItem(
+      'seadaysVoyages'
+    ) || '[]'
+  );
+
+
+function saveVoyages() {
+
+  localStorage.setItem(
+    'seadaysVoyages',
+    JSON.stringify(voyages)
+  );
+
+}
+
+
+/*
+ * ============================================================
+ * CALCULATE
+ * ============================================================
+ */
+
+function calculate() {
+
+  const start =
+    startEl.value
+      ? new Date(startEl.value)
+      : null;
+
+  const end =
+    endEl.value
+      ? new Date(endEl.value)
+      : null;
+
+  const refit =
+    Math.max(
+      0,
+      Number(daysRefitEl.value) || 0
+    );
+
+  const explicitUnderway =
+    Number(daysUnderwayEl.value) || null;
+
+
+  if (!start || !end) {
+
+    alert(
+      'Please choose both start and end dates.'
+    );
+
+    return null;
+
   }
 
-  const startEl = document.getElementById('start');
-  const endEl = document.getElementById('end');
-  const daysUnderwayEl = document.getElementById('daysUnderway');
-  const daysRefitEl = document.getElementById('daysRefit');
-  const watchEl = document.getElementById('watch');
 
-  const totalDaysEl = document.getElementById('totalDays');
-  const seaDaysEl = document.getElementById('seaDays');
-  const watchOutEl = document.getElementById('watchOut');
-  const totalSeaTimeEl = document.getElementById('totalSeaTime');
-  const logEl = document.getElementById('log');
+  if (end <= start) {
 
-  function display(msg) {
-    logEl.innerHTML = msg;
+    alert(
+      'End date must be after start date ' +
+      '(end date is not counted).'
+    );
+
+    return null;
+
   }
 
-  function calculate() {
-    const start = startEl.value ? new Date(startEl.value) : null;
-    const end = endEl.value ? new Date(endEl.value) : null;
-    const refit = Math.max(0, Number(daysRefitEl.value) || 0);
-    const explicitUnderway = Number(daysUnderwayEl.value) || null;
 
-    if (!start || !end) {
-      alert('Please choose both start and end dates.');
-      return;
-    }
-    if (end <= start) {
-      alert('End date must be after start date (end date is not counted).');
-      return;
-    }
+  const totalLogged =
+    daysBetween(start, end);
 
-    const totalLogged = daysBetween(start, end);
 
-    let daysAtSea = explicitUnderway ? Math.max(0, explicitUnderway) : totalLogged;
-    daysAtSea = Math.max(0, daysAtSea - refit);
+  let daysAtSea =
+    explicitUnderway
+      ? Math.max(0, explicitUnderway)
+      : totalLogged;
 
-    const watch = watchEl.value;
-    let watchLabel = (watch === '8h') ? '8 hours watches' : '12 hours watches';
 
-    // Corrected watch-based multiplier:
-    // TOTAL SEA TIME = days underway  OR  days underway * 1.5
-    let totalSeaTime = (watch === '8h')
+  daysAtSea =
+    Math.max(
+      0,
+      daysAtSea - refit
+    );
+
+
+  const watch =
+    watchEl.value;
+
+
+  const watchLabel =
+    watch === '8h'
+      ? '8 hours watches'
+      : '12 hours watches';
+
+
+  /*
+   * 8h = 1 × sea days
+   * 12h = 1.5 × sea days
+   */
+
+  let totalSeaTime =
+    watch === '8h'
       ? daysAtSea
       : daysAtSea * 1.5;
 
-    totalSeaTime = Math.round(totalSeaTime * 100) / 100;
 
-    totalDaysEl.textContent = totalLogged;
-    seaDaysEl.textContent = daysAtSea;
-    watchOutEl.textContent = watchLabel;
-    totalSeaTimeEl.textContent = totalSeaTime;
+  totalSeaTime =
+    Math.round(
+      totalSeaTime * 100
+    ) / 100;
 
-    display(
-      `From ${start.toLocaleDateString()} to ${end.toLocaleDateString()} = ${totalLogged} days`
-      + (explicitUnderway ? ` | Using provided Days Underway: ${explicitUnderway}` : '')
-      + (refit ? ` | Refit excluded: ${refit}` : '')
-    );
 
-    const csvRow = [
-      start.toISOString().slice(0,10),
-      end.toISOString().slice(0,10),
-      totalLogged,
-      daysAtSea,
-      totalSeaTime,
-      refit,
-      watch
-    ].join(',');
-    
-    let csvBox = document.getElementById('csvCopy');
-    if (!csvBox) {
-      const pre = document.createElement('pre');
-      pre.id = 'csvCopy';
-      pre.style.padding = '10px';
-      pre.style.background = '#fff';
-      pre.style.border = '1px dashed #ddd';
-      pre.textContent = 'CSV row (copy to save):\n' + csvRow;
-      logEl.appendChild(pre);
-    } else {
-      csvBox.textContent = 'CSV row (copy to save):\n' + csvRow;
+  /*
+   * Display current result
+   */
+
+  totalDaysEl.textContent =
+    totalLogged;
+
+  seaDaysEl.textContent =
+    daysAtSea;
+
+  watchOutEl.textContent =
+    watchLabel;
+
+  totalSeaTimeEl.textContent =
+    totalSeaTime;
+
+
+  display(
+    `From ${start.toLocaleDateString()} to ${
+      end.toLocaleDateString()
+    } = ${totalLogged} days`
+    +
+    (
+      explicitUnderway
+        ? ` | Using provided Days Underway: ${explicitUnderway}`
+        : ''
+    )
+    +
+    (
+      refit
+        ? ` | Refit excluded: ${refit}`
+        : ''
+    )
+  );
+
+
+  return {
+
+    id: Date.now(),
+
+    vessel:
+      vesselEl.value.trim()
+      || 'Unnamed voyage',
+
+    rank:
+      rankEl.value,
+
+    gt:
+      Number(gtEl.value) || 0,
+
+    voyageType:
+      voyageTypeEl.value,
+
+    start:
+      startEl.value,
+
+    end:
+      endEl.value,
+
+    totalLogged,
+
+    daysAtSea,
+
+    totalSeaTime,
+
+    refit,
+
+    watch,
+
+    watchLabel
+
+  };
+
+}
+
+
+/*
+ * ============================================================
+ * DISPLAY MESSAGE
+ * ============================================================
+ */
+
+function display(msg) {
+
+  logEl.innerHTML = msg;
+
+}
+
+
+/*
+ * ============================================================
+ * ADD VOYAGE
+ * ============================================================
+ */
+
+document
+  .getElementById('addVoyage')
+  .addEventListener(
+    'click',
+    () => {
+
+      const voyage =
+        calculate();
+
+      if (!voyage) return;
+
+
+      voyages.push(voyage);
+
+      saveVoyages();
+
+      renderVoyages();
+
+
+      display(
+        'Voyage added successfully to your Sea Time Log.'
+      );
+
     }
+  );
+
+
+/*
+ * ============================================================
+ * RENDER VOYAGE TABLE
+ * ============================================================
+ */
+
+function renderVoyages() {
+
+  if (voyages.length === 0) {
+
+    voyageTableContainer.innerHTML = `
+
+      <div class="empty">
+        No voyages recorded yet.
+      </div>
+
+    `;
+
+    voyageCountEl.textContent = '0';
+
+    sumLoggedDaysEl.textContent = '0';
+
+    sumSeaTimeEl.textContent = '0';
+
+    return;
+
   }
 
-  document.getElementById('calc').addEventListener('click', calculate);
-  document.getElementById('reset').addEventListener('click', () => {
-    startEl.value = ''; 
-    endEl.value = ''; 
-    daysUnderwayEl.value = ''; 
-    daysRefitEl.value = '0'; 
-    watchEl.value = '8h';
-    totalDaysEl.textContent = '—'; 
-    seaDaysEl.textContent = '—'; 
-    watchOutEl.textContent = '—';
-    totalSeaTimeEl.textContent = '—';
-    logEl.innerHTML = '';
-  });
+
+  /*
+   * Calculate totals
+   */
+
+  const totalLogged =
+    voyages.reduce(
+      (sum, voyage) =>
+        sum + Number(voyage.totalLogged),
+      0
+    );
+
+
+  const totalSeaTime =
+    voyages.reduce(
+      (sum, voyage) =>
+        sum + Number(voyage.totalSeaTime),
+      0
+    );
+
+
+  const totalDaysAtSea =
+    voyages.reduce(
+      (sum, voyage) =>
+        sum + Number(voyage.daysAtSea),
+      0
+    );
+
+
+  /*
+   * Summary cards
+   */
+
+  voyageCountEl.textContent =
+    voyages.length;
+
+  sumLoggedDaysEl.textContent =
+    totalLogged;
+
+  sumSeaTimeEl.textContent =
+    Math.round(
+      totalSeaTime * 100
+    ) / 100;
+
+
+  /*
+   * Build table
+   */
+
+  let html = `
+
+    <div class="table-container">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>#</th>
+
+          <th>Vessel / Voyage</th>
+
+          <th>Rank</th>
+
+          <th>GT</th>
+
+          <th>Voyage Type</th>
+
+          <th>Start</th>
+
+          <th>End</th>
+
+          <th>Logged Days</th>
+
+          <th>Days at Sea</th>
+
+          <th>Watch</th>
+
+          <th>Sea Time</th>
+
+          <th></th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+  `;
+
+
+  voyages.forEach(
+    (voyage, index) => {
+
+      html += `
+
+        <tr>
+
+          <td>
+            ${index + 1}
+          </td>
+
+          <td>
+            ${escapeHtml(voyage.vessel)}
+          </td>
+
+          <td>
+            ${escapeHtml(voyage.rank)}
+          </td>
+
+          <td>
+            ${voyage.gt
+              ? Number(voyage.gt).toLocaleString()
+              : '—'}
+          </td>
+
+          <td>
+            ${escapeHtml(voyage.voyageType)}
+          </td>
+
+          <td>
+            ${formatDate(voyage.start)}
+          </td>
+
+          <td>
+            ${formatDate(voyage.end)}
+          </td>
+
+          <td>
+            ${voyage.totalLogged}
+          </td>
+
+          <td>
+            ${voyage.daysAtSea}
+          </td>
+
+          <td>
+            ${voyage.watch === '8h'
+              ? '8h'
+              : '12h'}
+          </td>
+
+          <td>
+            <strong>
+              ${voyage.totalSeaTime}
+            </strong>
+          </td>
+
+          <td>
+
+            <button
+              class="delete-btn"
+              onclick="deleteVoyage(${voyage.id})">
+
+              Delete
+
+            </button>
+
+          </td>
+
+        </tr>
+
+      `;
+
+    }
+  );
+
+
+  /*
+   * Total row
+   */
+
+  html += `
+
+      <tr class="total-row">
+
+        <td colspan="7">
+          TOTAL
+        </td>
+
+        <td>
+          ${totalLogged}
+        </td>
+
+        <td>
+          ${totalDaysAtSea}
+        </td>
+
+        <td></td>
+
+        <td>
+          ${Math.round(
+            totalSeaTime * 100
+          ) / 100}
+        </td>
+
+        <td></td>
+
+      </tr>
+
+    </tbody>
+
+    </table>
+
+    </div>
+
+  `;
+
+
+  voyageTableContainer.innerHTML =
+    html;
+
+}
+
+
+/*
+ * ============================================================
+ * DELETE VOYAGE
+ * ============================================================
+ */
+
+function deleteVoyage(id) {
+
+  const voyage =
+    voyages.find(
+      v => v.id === id
+    );
+
+
+  if (!voyage) return;
+
+
+  const confirmed =
+    confirm(
+      `Delete voyage "${voyage.vessel}"?`
+    );
+
+
+  if (!confirmed) return;
+
+
+  voyages =
+    voyages.filter(
+      v => v.id !== id
+    );
+
+
+  saveVoyages();
+
+  renderVoyages();
+
+}
+
+
+/*
+ * ============================================================
+ * FORMAT DATE
+ * ============================================================
+ */
+
+function formatDate(dateString) {
+
+  if (!dateString) return '';
+
+  const parts =
+    dateString.split('-');
+
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+}
+
+
+/*
+ * ============================================================
+ * HTML ESCAPE
+ * ============================================================
+ */
+
+function escapeHtml(text) {
+
+  const div =
+    document.createElement('div');
+
+  div.textContent =
+    text == null ? '' : text;
+
+  return div.innerHTML;
+
+}
+
+
+/*
+ * ============================================================
+ * CALCULATE BUTTON
+ * ============================================================
+ */
+
+document
+  .getElementById('calc')
+  .addEventListener(
+    'click',
+    calculate
+  );
+
+
+/*
+ * ============================================================
+ * RESET CURRENT CALCULATION
+ * ============================================================
+ */
+
+document
+  .getElementById('reset')
+  .addEventListener(
+    'click',
+    () => {
+
+      vesselEl.value = '';
+
+      rankEl.value = 'Master';
+
+      gtEl.value = '';
+
+      voyageTypeEl.value =
+        'International';
+
+      startEl.value = '';
+
+      endEl.value = '';
+
+      daysUnderwayEl.value = '';
+
+      daysRefitEl.value = '0';
+
+      watchEl.value = '8h';
+
+      totalDaysEl.textContent = '—';
+
+      seaDaysEl.textContent = '—';
+
+      watchOutEl.textContent = '—';
+
+      totalSeaTimeEl.textContent = '—';
+
+      logEl.innerHTML = '';
+
+    }
+  );
+
+
+/*
+ * ============================================================
+ * LOAD SAVED VOYAGES
+ * ============================================================
+ */
+
+renderVoyages();
+
 </script>
 
 </body>
